@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RootAIPro - نموذج الإبلاغ</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #f5f9ff;
+      padding: 30px;
+      color: #1b1b1b;
+      text-align: center;
+    }
+    .container {
+      background: white;
+      max-width: 600px;
+      margin: auto;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background: #2ecc71;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #27ae60; }
+    hr { margin: 25px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📝 نموذج الإبلاغ عن حادث</h2>
+    <form id="incidentForm">
+      <input type="text" id="name" placeholder="الاسم" required />
+      <input type="email" id="email" placeholder="البريد الإلكتروني" required />
+      <input type="text" id="whatsapp" placeholder="رقم واتساب" />
+      <input type="text" id="country" placeholder="الدولة" />
+      <textarea id="description" placeholder="وصف الحادث" required></textarea>
+      <button type="submit">إرسال</button>
+    </form>
+
+    <div id="result"></div>
+
+    <hr>
+
+    <h3>🔍 استعراض التقرير</h3>
+    <input type="text" id="reportId" placeholder="أدخل رقم التقرير (UniqueID)" />
+    <button onclick="fetchReport()">عرض التقرير</button>
+
+    <div id="reportArea" style="margin-top:20px; text-align:right;"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("incidentForm");
+    const result = document.getElementById("result");
+    const reportArea = document.getElementById("reportArea");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      result.innerHTML = "⏳ جاري الإرسال...";
+      const data = {
+        name: form.name?.value || document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        whatsapp: document.getElementById("whatsapp").value,
+        country: document.getElementById("country").value,
+        description: document.getElementById("description").value
+      };
+      try {
+        const res = await fetch("/incident", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (json.success) {
+          result.innerHTML = `✅ تم الإرسال بنجاح!<br>رقم التقرير: <b>${json.id}</b>`;
+        } else {
+          result.innerHTML = "❌ حدث خطأ أثناء الإرسال.";
+        }
+      } catch (err) {
+        result.innerHTML = "⚠️ تعذر الاتصال بالخادم.";
+      }
+    });
+
+    async function fetchReport() {
+      const id = document.getElementById("reportId").value.trim();
+      if (!id) return alert("أدخل رقم التقرير أولاً!");
+      reportArea.innerHTML = "⏳ جاري البحث...";
+      const res = await fetch(`/report?id=${id}`);
+      const text = await res.text();
+      reportArea.innerHTML = text;
+    }
+  </script>
+</body>
+</html>
